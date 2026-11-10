@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="description" content="NEON RUSH 3D - A futuristic 3D endless runner in a neon cyberpunk city." />
+  <meta name="theme-color" content="#050714" />
+  <title>NEON RUSH 3D</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game-canvas"></canvas>
+
+    <div id="webgl-error" class="screen hidden">
+      <div class="panel">
+        <h2>WebGL Unavailable</h2>
+        <p>NEON RUSH 3D needs WebGL. Please enable hardware acceleration in your browser or try a different browser.</p>
+      </div>
+    </div>
+
+    <!-- SPLASH -->
+    <section id="screen-splash" class="screen active">
+      <div class="splash-logo">
+        <h1 class="logo-title"><span class="logo-neon">NEON</span> <span class="logo-rush">RUSH</span></h1>
+        <div class="logo-3d">3D</div>
+        <p class="splash-tag">RUN THE CITY. OWN THE NIGHT.</p>
+        <div class="loader"><div class="loader-bar" id="loader-bar"></div></div>
+        <p class="splash-hint" id="splash-hint">Loading...</p>
+      </div>
+    </section>
+
+    <!-- MAIN MENU -->
+    <section id="screen-menu" class="screen">
+      <div class="panel menu-panel">
+        <h1 class="logo-title small"><span class="logo-neon">NEON</span> <span class="logo-rush">RUSH</span> <span class="logo-3d-inline">3D</span></h1>
+        <div class="menu-stats">
+          <div class="stat-card"><span class="stat-label">Best Distance</span><span class="stat-value" id="menu-best">0 m</span></div>
+          <div class="stat-card"><span class="stat-label">Total Coins</span><span class="stat-value" id="menu-coins">0</span></div>
+        </div>
+        <div class="menu-buttons">
+          <button class="btn btn-primary" data-action="play" data-sound="select">PLAY</button>
+          <button class="btn" data-action="goto-characters" data-sound="click">CHARACTER</button>
+          <button class="btn" data-action="toggle-sound" data-sound="click"><span id="sound-label">SOUND: ON</span></button>
+          <button class="btn" data-action="show-help" data-sound="click">HOW TO PLAY</button>
+        </div>
+        <p class="footer-note">Desktop: Arrows / WASD &middot; Mobile: Swipe</p>
+      </div>
+      <div id="help-overlay" class="overlay hidden">
+        <div class="panel">
+          <h2>How To Play</h2>
+          <ul class="help-list">
+            <li><b>Left / Right or A / D</b> - change lane</li>
+            <li><b>Up / Space / W</b> - jump</li>
+            <li><b>Down / S</b> - slide under barriers</li>
+            <li><b>Esc / P</b> - pause</li>
+            <li>Collect neon coins and fill the boost meter. Press <b>B</b> or tap the boost button to ignite it.</li>
+          </ul>
+          <button class="btn" data-action="hide-help" data-sound="click">GOT IT</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHARACTER SELECT -->
+    <section id="screen-characters" class="screen">
+      <div class="panel">
+        <h2 class="screen-title">SELECT RUNNER</h2>
+        <div class="char-grid" id="char-grid">
+          <button class="char-card" data-color="cyan" data-sound="click">
+            <span class="char-swatch" style="--c:#00f0ff"></span><span class="char-name">CYAN</span>
+          </button>
+          <button class="char-card" data-color="pink" data-sound="click">
+            <span class="char-swatch" style="--c:#ff2bd6"></span><span class="char-name">PINK</span>
+          </button>
+          <button class="char-card" data-color="green" data-sound="click">
+            <span class="char-swatch" style="--c:#39ff14"></span><span class="char-name">GREEN</span>
+          </button>
+          <button class="char-card" data-color="orange" data-sound="click">
+            <span class="char-swatch" style="--c:#ff8a1f"></span><span class="char-name">ORANGE</span>
+          </button>
+        </div>
+        <div class="menu-buttons row">
+          <button class="btn" data-action="back-menu" data-sound="click">BACK</button>
+          <button class="btn btn-primary" data-action="play" data-sound="select">PLAY</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAMEPLAY HUD -->
+    <section id="screen-hud" class="screen">
+      <div class="hud-top">
+        <div class="hud-block">
+          <span class="hud-label">DISTANCE</span>
+          <span class="hud-value" id="hud-distance">0 m</span>
+        </div>
+        <div class="hud-block center">
+          <span class="hud-label">SPEED</span>
+          <span class="hud-value" id="hud-speed">0 km/h</span>
+        </div>
+        <div class="hud-block right">
+          <span class="hud-label">COINS</span>
+          <span class="hud-value coin-text" id="hud-coins">0</span>
+        </div>
+      </div>
+      <div class="hud-sub">
+        <span>BEST <b id="hud-best">0 m</b></span>
+        <button class="pause-btn" data-action="pause" data-sound="click" aria-label="Pause">II</button>
+      </div>
+      <div class="boost-wrap">
+        <span class="hud-label">BOOST</span>
+        <div class="boost-bar"><div class="boost-fill" id="boost-fill"></div></div>
+        <button class="btn btn-small" id="boost-btn" data-action="boost" data-sound="select" disabled>BOOST</button>
+      </div>
+      <div class="touch-controls" id="touch-controls">
+        <button class="touch-btn left" data-touch="left" aria-label="Left">&#9664;</button>
+        <button class="touch-btn jump" data-touch="jump" aria-label="Jump">&#9650;</button>
+        <button class="touch-btn slide" data-touch="slide" aria-label="Slide">&#9660;</button>
+        <button class="touch-btn right" data-touch="right" aria-label="Right">&#9654;</button>
+      </div>
+      <div id="float-msg" class="float-msg"></div>
+    </section>
+
+    <!-- PAUSE -->
+    <section id="screen-pause" class="screen">
+      <div class="panel">
+        <h2 class="screen-title">PAUSED</h2>
+        <div class="menu-buttons">
+          <button class="btn btn-primary" data-action="resume" data-sound="select">RESUME</button>
+          <button class="btn" data-action="restart" data-sound="click">RESTART</button>
+          <button class="btn" data-action="toggle-sound" data-sound="click"><span class="sound-label">SOUND: ON</span></button>
+          <button class="btn" data-action="quit-menu" data-sound="click">MAIN MENU</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME OVER -->
+    <section id="screen-gameover" class="screen">
+      <div class="panel">
+        <h2 class="screen-title danger">CRASHED</h2>
+        <p class="go-sub" id="go-reason">You hit an obstacle.</p>
+        <div class="menu-buttons">
+          <button class="btn btn-primary" data-action="restart" data-sound="select">RUN AGAIN</button>
+          <button class="btn" data-action="show-final" data-sound="click">RESULTS</button>
+          <button class="btn" data-action="quit-menu" data-sound="click">MAIN MENU</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL SCORE -->
+    <section id="screen-final" class="screen">
+      <div class="panel final-panel">
+        <h2 class="screen-title">RUN SUMMARY</h2>
+        <div class="final-grid">
+          <div class="stat-card big"><span class="stat-label">Distance</span><span class="stat-value" id="final-distance">0 m</span></div>
+          <div class="stat-card big"><span class="stat-label">Coins</span><span class="stat-value" id="final-coins">0</span></div>
+          <div class="stat-card big"><span class="stat-label">Top Speed</span><span class="stat-value" id="final-speed">0 km/h</span></div>
+          <div class="stat-card big"><span class="stat-label">Best Distance</span><span class="stat-value" id="final-best">0 m</span></div>
+        </div>
+        <p class="new-record hidden" id="new-record">NEW PERSONAL BEST!</p>
+        <div class="menu-buttons">
+          <button class="btn btn-primary" data-action="restart" data-sound="select">PLAY AGAIN</button>
+          <button class="btn" data-action="quit-menu" data-sound="click">MAIN MENU</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
